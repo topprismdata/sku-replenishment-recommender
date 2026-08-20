@@ -1,0 +1,95 @@
+# ============================================================
+# SKU Replenishment Recommender — .gitignore
+# 严格排除任何可能含客户业务数据 / 模型产物 / 凭证的文件
+# ============================================================
+
+# ---- 客户业务数据 (顶层常见命名, 防御性追加) ----
+*.csv
+*.tsv
+*.parquet
+*.feather
+*.xlsx
+*.xls
+
+# 排除项目中常见的中文业务数据文件名
+*订单*.csv
+*客户*.csv
+*产品*.csv
+*推荐*.csv
+*sku*.csv
+
+# ---- 模型产物 (AutoGluon pkl 内嵌特征名, 不可公开) ----
+models/
+**/utils/attr/*/y_pred_proba*.pkl
+*.pkl
+*.joblib
+*.pickle
+
+# ---- MLflow 实验追踪 ----
+mlruns/
+mlflow.db
+mlflow.db-*
+mlruns/
+
+# ---- 历史归档 / 业务交付 / 推荐结果 ----
+archive/
+deliverable/
+*推荐sku*/
+*推荐SKU*/
+pre_may_recommendations/
+
+# ---- Python ----
+__pycache__/
+**/__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.py[cod]
+*$py.class
+*.egg-info/
+.eggs/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# ---- 虚拟环境 ----
+venv/
+.venv/
+env/
+ENV/
+
+# ---- IDE ----
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# ---- Notebook ----
+.ipynb_checkpoints/
+*.ipynb
+
+# ---- 凭证 / 密钥 (绝不入库) ----
+*.key
+*.pem
+*.token
+ghkey.txt
+secret.txt
+.env
+.env.*
+
+# ---- 日志 ----
+*.log
+logs/
+
+# ---- 构建产物 ----
+build/
+dist/
+*.egg
+
+# ---- WSL / Linux 临时 ----
+nul
+nohup.out
