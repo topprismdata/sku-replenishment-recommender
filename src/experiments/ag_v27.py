@@ -12,6 +12,15 @@ AG v27 — 13周训练 + Optuna 调优 (N + AG 超参)
 # Week configuration - adjust to your data
 # ============================================================
 TRAIN_START_WEEK = 1   # first training week (inclusive)
+
+# N formula tuning - adjust to your data
+# These are business-tuned values that must be calibrated for your own
+# per-channel N formula. Defaults shown are placeholders.
+TBD_N_OFFSET = 5          # added to typical_n (e.g., N = typical_n + TBD_N_OFFSET)
+TBD_N_MIN = 10            # minimum N (recommended per row)
+TBD_N_BONUS = 10          # bonus N above CHANNEL_N_CAP for search range
+TBD_N_DEFAULT = 25        # default N if CHANNEL_N_CAP entry is missing
+TBD_CAP = 25              # default per-channel N upper bound
 TARGET_WEEK = 1        # first target / prediction week (inclusive)
 # Extend with: TARGET_WEEK_2 = TARGET_WEEK + 1, etc. for walk-forward
 # ============================================================
@@ -43,7 +52,7 @@ def evaluate_n_params(candidates, valid_skus, channel, base, mult):
     for c in set(candidates['OUTLET']) & set(valid_skus):
         cd = candidates[candidates['OUTLET']==c]
         typical = cd['cust_typical_n'].iloc[0]
-        N = int(min(max(base + mult * typical, 10), CHANNEL_N_CAP[channel] * 1.5))
+        N = int(min(max(base + mult * typical, TBD_N_MIN), CHANNEL_N_CAP[channel] * 1.5))
         rec = set(cd.nlargest(N, 'prob')['ARTICLE'])
         act = valid_skus[c]
         tr += len(rec); ta += len(act); th += len(rec & act)
@@ -145,7 +154,7 @@ def main():
 
         # 对比
         f1_typical = evaluate_n_params(candidates, vs, ch, 5, 1.0)
-        print(f"    对比 typical+5: F1={100*f1_typical:.0f}%")
+        print(f"    对比 typical + TBD_N_OFFSET: F1={100*f1_typical:.0f}%")
 
 
 if __name__ == "__main__":

@@ -13,6 +13,15 @@ AG v20 — 加route_id + 子渠道特征
 # Week configuration - adjust to your data
 # ============================================================
 TRAIN_START_WEEK = 1   # first training week (inclusive)
+
+# N formula tuning - adjust to your data
+# These are business-tuned values that must be calibrated for your own
+# per-channel N formula. Defaults shown are placeholders.
+TBD_N_OFFSET = 5          # added to typical_n (e.g., N = typical_n + TBD_N_OFFSET)
+TBD_N_MIN = 10            # minimum N (recommended per row)
+TBD_N_BONUS = 10          # bonus N above CHANNEL_N_CAP for search range
+TBD_N_DEFAULT = 25        # default N if CHANNEL_N_CAP entry is missing
+TBD_CAP = 25              # default per-channel N upper bound
 TARGET_WEEK = 1        # first target / prediction week (inclusive)
 # Extend with: TARGET_WEEK_2 = TARGET_WEEK + 1, etc. for walk-forward
 # ============================================================
@@ -153,7 +162,7 @@ def main():
             active_weeks = cd['c_weeks'].iloc[0] if 'c_weeks' in cd.columns else 5
             avg_freq = cd['c_freq'].iloc[0] if 'c_freq' in cd.columns else typical
             best_n, best_f1 = 20, 0
-            for N in range(10, min(CHANNEL_N_CAP[ch]+10, 51)):
+            for N in range(TBD_N_MIN, min(CHANNEL_N_CAP[ch] + TBD_N_BONUS, 51)):
                 rec = set(cd.nlargest(N, 'prob')['ARTICLE'])
                 act = vs[c]
                 hit = len(rec & act)
@@ -169,7 +178,7 @@ def main():
         n_model = lgb.LGBMRegressor(num_leaves=31, learning_rate=0.05, feature_fraction=0.8,
                                     min_child_samples=50, verbose=-1, seed=42, n_estimators=100)
         n_model.fit(n_df[n_feat], n_df['best_n'])
-        n_df['pred_n'] = np.clip(n_model.predict(n_df[n_feat]).round(), 10, CHANNEL_N_CAP[ch]+5).astype(int)
+        n_df['pred_n'] = np.clip(n_model.predict(n_df[n_feat]).round(), TBD_N_MIN, CHANNEL_N_CAP[ch] + TBD_N_BONUS).astype(int)
 
         tr, ta, th = 0, 0, 0
         for _, row in n_df.iterrows():

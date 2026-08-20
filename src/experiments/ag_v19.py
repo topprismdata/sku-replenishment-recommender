@@ -6,12 +6,21 @@ AG v19 — 预测 N (学出来的 N, 不是手工规则)
 - 目标: 该客户最优推荐数 (用 F1 反推)
 - 方法: 每客户独立优化 N (遍历 10-50, 找 F1 最高的)
 
-这比手工规则 (typical_n+5) 高级: 是学出来的, 不是拍脑袋
+这比手工规则 (typical_n + TBD_N_OFFSET) 高级: 是学出来的, 不是拍脑袋
 """
 # ============================================================
 # Week configuration - adjust to your data
 # ============================================================
 TRAIN_START_WEEK = 1   # first training week (inclusive)
+
+# N formula tuning - adjust to your data
+# These are business-tuned values that must be calibrated for your own
+# per-channel N formula. Defaults shown are placeholders.
+TBD_N_OFFSET = 5          # added to typical_n (e.g., N = typical_n + TBD_N_OFFSET)
+TBD_N_MIN = 10            # minimum N (recommended per row)
+TBD_N_BONUS = 10          # bonus N above CHANNEL_N_CAP for search range
+TBD_N_DEFAULT = 25        # default N if CHANNEL_N_CAP entry is missing
+TBD_CAP = 25              # default per-channel N upper bound
 TARGET_WEEK = 1        # first target / prediction week (inclusive)
 # Extend with: TARGET_WEEK_2 = TARGET_WEEK + 1, etc. for walk-forward
 # ============================================================
@@ -97,7 +106,7 @@ def main():
 
             # 遍历 N 找最优
             best_n, best_f1 = 20, 0
-            for N in range(10, min(cap+10, 51)):
+            for N in range(TBD_N_MIN, min(cap + TBD_N_BONUS, 51)):
                 rec = set(cd.nlargest(N, 'prob')['ARTICLE'])
                 act = vs[c]
                 hit = len(rec & act)
@@ -130,7 +139,7 @@ def main():
 
         # 预测所有客户的最优 N
         pred_n = n_model.predict(n_df[n_feat])
-        n_df['pred_n'] = np.clip(pred_n.round(), 10, cap+5).astype(int)
+        n_df['pred_n'] = np.clip(pred_n.round(), TBD_N_MIN, cap + TBD_N_BONUS).astype(int)
 
         print(f"    预测 N vs 真实最优 N: MAE={np.mean(np.abs(n_df['best_n'] - n_df['pred_n'])):.1f}")
         print(f"    相关性: {n_df['best_n'].corr(n_df['pred_n']):.2f}")
@@ -147,17 +156,17 @@ def main():
         p = th/max(tr,1); r = th/max(ta,1); f1 = 2*p*r/max(p+r,1e-8)
         print(f"    >>> 用预测 N: F1={100*f1:.0f}% (P={100*p:.0f}% R={100*r:.0f}%)")
 
-        # 对比: 固定 N=typical+5
+        # 对比: 固定 N=typical + TBD_N_OFFSET
         tr2, ta2, th2 = 0, 0, 0
         for _, row in n_df.iterrows():
             c = row['cust']
             cd = candidates[candidates['OUTLET']==c]
-            N = int(min(max(row['typical']+5, 10), cap))
+            N = int(min(max(row['typical'] + TBD_N_OFFSET, TBD_N_MIN), cap))
             rec = set(cd.nlargest(N, 'prob')['ARTICLE'])
             act = vs[c]
             tr2 += len(rec); ta2 += len(act); th2 += len(rec & act)
         p2 = th2/max(tr2,1); r2 = th2/max(ta2,1); f12 = 2*p2*r2/max(p2+r2,1e-8)
-        print(f"    对比 typical+5: F1={100*f12:.0f}%")
+        print(f"    对比 typical + TBD_N_OFFSET: F1={100*f12:.0f}%")
 
         # 对比: 真实最优 N (上限)
         tr3, ta3, th3 = 0, 0, 0

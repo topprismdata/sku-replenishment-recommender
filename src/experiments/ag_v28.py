@@ -7,12 +7,21 @@ AG v28 — 13周训练 + 分渠道 Optuna 调 N
    - 各渠道客户行为差异大, 不应共享 N
 3. AG 超参用 v26 已验证参数 (num_leaves 63+31, min_child 100+50)
 
-对比: v26 固定 N (typical+5) vs v28 Optuna N (per channel)
+对比: v26 固定 N (typical + TBD_N_OFFSET) vs v28 Optuna N (per channel)
 """
 # ============================================================
 # Week configuration - adjust to your data
 # ============================================================
 TRAIN_START_WEEK = 1   # first training week (inclusive)
+
+# N formula tuning - adjust to your data
+# These are business-tuned values that must be calibrated for your own
+# per-channel N formula. Defaults shown are placeholders.
+TBD_N_OFFSET = 5          # added to typical_n (e.g., N = typical_n + TBD_N_OFFSET)
+TBD_N_MIN = 10            # minimum N (recommended per row)
+TBD_N_BONUS = 10          # bonus N above CHANNEL_N_CAP for search range
+TBD_N_DEFAULT = 25        # default N if CHANNEL_N_CAP entry is missing
+TBD_CAP = 25              # default per-channel N upper bound
 TARGET_WEEK = 1        # first target / prediction week (inclusive)
 # Extend with: TARGET_WEEK_2 = TARGET_WEEK + 1, etc. for walk-forward
 # ============================================================
@@ -74,7 +83,7 @@ def main():
     tw, tws = TARGET_WEEK, list(range(TRAIN_START_WEEK, TARGET_WEEK))  # 13周训练
     vs = weekly[weekly['week'] == tw].groupby('OUTLET')['ARTICLE'].apply(set).to_dict()
 
-    results_v26 = []  # 固定 N = typical+5
+    results_v26 = []  # 固定 N = typical + TBD_N_OFFSET
     results_v28 = []  # Optuna N
     best_params = {}
 
@@ -122,10 +131,10 @@ def main():
         proba = model.predict_proba(candidates[all_feat])
         candidates['prob'] = proba.iloc[:, 1].values if hasattr(proba, 'iloc') else proba[:, 1]
 
-        # v26 基线: N = typical + 5
+        # v26 基线: N = typical + TBD_N_OFFSET
         f1_v26 = evaluate_n_params(candidates, vs, ch, 5, 1.0)
         results_v26.append(f1_v26)
-        print(f"  v26 N (typical+5): F1={100 * f1_v26:.1f}%")
+        print(f"  v26 N (typical + TBD_N_OFFSET): F1={100 * f1_v26:.1f}%")
 
         # v28 Optuna 调 N
         def objective_n(trial):
@@ -146,7 +155,7 @@ def main():
     print(f"\n{'=' * 60}")
     print("汇总对比")
     print(f"{'=' * 60}")
-    print(f"{'channel':<8} {'v26(typical+5)':>15} {'v28(Optuna N)':>15} {'提升':>8}")
+    print(f"{'channel':<8} {'v26(typical + TBD_N_OFFSET)':>15} {'v28(Optuna N)':>15} {'提升':>8}")
     for i, ch in enumerate(['channel_a', 'channel_b', 'channel_c', 'channel_d']):
         diff = results_v28[i] - results_v26[i]
         print(f"{ch:<8} {100 * results_v26[i]:>14.1f}% {100 * results_v28[i]:>14.1f}% {100 * diff:>+7.1f}pp")

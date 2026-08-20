@@ -10,6 +10,15 @@ v3->v4 优化:
 # Week configuration - adjust to your data
 # ============================================================
 TRAIN_START_WEEK = 1   # first training week (inclusive)
+
+# N formula tuning - adjust to your data
+# These are business-tuned values that must be calibrated for your own
+# per-channel N formula. Defaults shown are placeholders.
+TBD_N_OFFSET = 5          # added to typical_n (e.g., N = typical_n + TBD_N_OFFSET)
+TBD_N_MIN = 10            # minimum N (recommended per row)
+TBD_N_BONUS = 10          # bonus N above CHANNEL_N_CAP for search range
+TBD_N_DEFAULT = 25        # default N if CHANNEL_N_CAP entry is missing
+TBD_CAP = 25              # default per-channel N upper bound
 TARGET_WEEK = 1        # first target / prediction week (inclusive)
 # Extend with: TARGET_WEEK_2 = TARGET_WEEK + 1, etc. for walk-forward
 # ============================================================
@@ -20,7 +29,7 @@ warnings.filterwarnings('ignore')
 
 CHANNEL_MAP = {'channel_a':['sub_code_1','sub_code_2'],'channel_b':['sub_code_8','sub_code_9','sub_code_10','sub_code_11','sub_code_12'],'channel_c':['sub_code_13','sub_code_14','sub_code_15','sub_code_16'],'channel_d':['sub_code_3','sub_code_4','sub_code_5','sub_code_6','sub_code_7']}
 CODE_TO_CH = {c:ch for ch,cs in CHANNEL_MAP.items() for c in cs}
-CHANNEL_N_CAP = {'channel_a':25, 'channel_b':30, 'channel_c':20, 'channel_d':20}
+CHANNEL_N_CAP = {'channel_a': TBD_CAP, 'channel_b': TBD_CAP, 'channel_c': TBD_CAP, 'channel_d': TBD_CAP}
 
 
 def load_data():
@@ -170,12 +179,12 @@ def train_predict_v4(weekly, channel, train_weeks, target_week):
 
 
 def evaluate_dynamic_n(preds, valid_skus, channel):
-    cap = CHANNEL_N_CAP.get(channel, 25)
+    cap = CHANNEL_N_CAP.get(channel, TBD_N_DEFAULT)
     tr, ta, th = 0, 0, 0
     for c in set(preds['OUTLET']) & set(valid_skus):
         cd = preds[preds['OUTLET']==c]
-        typical = cd['cust_typical_n'].iloc[0] if len(cd)>0 else 15
-        N = int(min(max(typical + 5, 10), cap))
+        typical = cd['cust_typical_n'].iloc[0] if len(cd)>0 else TBD_N_DEFAULT
+        N = int(min(max(typical + TBD_N_OFFSET, TBD_N_MIN), cap))
         rec = set(cd.nlargest(N,'prob')['ARTICLE'])
         act = valid_skus[c]
         tr += len(rec); ta += len(act); th += len(rec & act)

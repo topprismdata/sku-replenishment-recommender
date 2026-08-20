@@ -15,6 +15,15 @@ AG v9 — Instacart 启发的特征工程
 # Week configuration - adjust to your data
 # ============================================================
 TRAIN_START_WEEK = 1   # first training week (inclusive)
+
+# N formula tuning - adjust to your data
+# These are business-tuned values that must be calibrated for your own
+# per-channel N formula. Defaults shown are placeholders.
+TBD_N_OFFSET = 5          # added to typical_n (e.g., N = typical_n + TBD_N_OFFSET)
+TBD_N_MIN = 10            # minimum N (recommended per row)
+TBD_N_BONUS = 10          # bonus N above CHANNEL_N_CAP for search range
+TBD_N_DEFAULT = 25        # default N if CHANNEL_N_CAP entry is missing
+TBD_CAP = 25              # default per-channel N upper bound
 TARGET_WEEK = 1        # first target / prediction week (inclusive)
 # Extend with: TARGET_WEEK_2 = TARGET_WEEK + 1, etc. for walk-forward
 # ============================================================
@@ -228,7 +237,7 @@ def main():
         tr,ta,th = 0,0,0
         for c in set(candidates['OUTLET']) & set(vs):
             cd = candidates[candidates['OUTLET']==c]
-            N = int(min(max(cd['cust_typical_n'].iloc[0]+5,10), cap))
+            N = int(min(max(cd['cust_typical_n'].iloc[0] + TBD_N_OFFSET, TBD_N_MIN), cap))
             rec = set(cd.nlargest(N,'prob')['ARTICLE']); act = vs[c]
             tr+=len(rec); ta+=len(act); th+=len(rec&act)
         p=th/max(tr,1); r=th/max(ta,1); f1=2*p*r/max(p+r,1e-8)

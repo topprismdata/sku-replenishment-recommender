@@ -136,7 +136,7 @@ def main():
 
         # 按 N 公式推荐
         base, mult = BEST_N[ch]
-        cap = CHANNEL_N_CAP.get(ch, 25)
+        cap = CHANNEL_N_CAP.get(ch, TBD_N_DEFAULT)
         ch_custs = sub[sub['channel'] == ch]['customer_id'].unique()
         n_rec = 0
         for c in ch_custs:
@@ -162,7 +162,7 @@ def main():
         proba_cv = model_cv.predict_proba(candidates_cv[all_feat_cv])
         candidates_cv['prob'] = proba_cv.iloc[:, 1].values if hasattr(proba_cv, 'iloc') else proba_cv[:, 1]
         base, mult = BEST_N['channel_e']
-        cap = CHANNEL_N_CAP.get('channel_a', 25)
+        cap = CHANNEL_N_CAP.get('channel_a', TBD_N_DEFAULT)
         n_rec = 0
         for c in cv_custs:
             cd = candidates_cv[candidates_cv['OUTLET'] == c]
