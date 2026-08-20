@@ -11,6 +11,14 @@ AG v9 — Instacart 启发的特征工程
 
 保持 v8 的有效特征, 不动 AG 配置 (v7 教训: 过优化反降)
 """
+# ============================================================
+# Week configuration - adjust to your data
+# ============================================================
+TRAIN_START_WEEK = 1   # first training week (inclusive)
+TARGET_WEEK = 1        # first target / prediction week (inclusive)
+# Extend with: TARGET_WEEK_2 = TARGET_WEEK + 1, etc. for walk-forward
+# ============================================================
+
 import sys, os, time, warnings
 import numpy as np, pandas as pd
 # 定位项目根目录 (数据文件所在)
@@ -190,7 +198,7 @@ def main():
     prod, _ = load_static_features()
     print(f"周聚合: {len(weekly):,}")
 
-    tw, tws = 23, list(range(19,23))
+    tw, tws = TARGET_WEEK, list(range(TRAIN_START_WEEK, TARGET_WEEK))
     vs = weekly[weekly['week']==tw].groupby('OUTLET')['ARTICLE'].apply(set).to_dict()
 
     all_f1 = []
@@ -238,7 +246,7 @@ def main():
 
     avg = np.mean(all_f1)
     print(f"\n{'='*60}")
-    print(f"W23 平均 F1: {100*avg:.1f}% (v8=65.8%, v6=64.1%)")
+    print(f"W23 平均 F1: {100*avg:.1f}% (v_N=TBD%, v_N=TBD%)")
 
 
 if __name__ == "__main__":

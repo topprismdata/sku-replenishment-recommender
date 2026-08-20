@@ -54,10 +54,10 @@ Edit `CHANNEL_MAP` in `src/core/lgb_v4.py` to match your taxonomy:
 
 ```python
 CHANNEL_MAP = {
-    'channel_a': ['A70', 'A72'],
-    'channel_b': ['F21', 'F20', 'F22'],
-    'channel_c': ['G12', 'G10'],
-    'channel_d': ['A60', 'A53'],
+    'channel_a': ['sub_code_1', 'sub_code_2'],
+    'channel_b': ['sub_code_8', 'sub_code_9', 'sub_code_10'],
+    'channel_c': ['sub_code_13', 'sub_code_14'],
+    'channel_d': ['sub_code_3', 'sub_code_4'],
 }
 ```
 

@@ -10,6 +10,14 @@ AG v13 — 全特征 EDA 启发 (冰柜+等级+卡路里+金额+包装规格)
 6. OPEN_DATE → 客户年龄
 7. n_provinces (产品渗透度)
 """
+# ============================================================
+# Week configuration - adjust to your data
+# ============================================================
+TRAIN_START_WEEK = 1   # first training week (inclusive)
+TARGET_WEEK = 1        # first target / prediction week (inclusive)
+# Extend with: TARGET_WEEK_2 = TARGET_WEEK + 1, etc. for walk-forward
+# ============================================================
+
 import sys, os, time, warnings
 import numpy as np, pandas as pd
 # 定位项目根目录 (含数据文件的目录, 有 lgb_v4.py 或 orders_2026.csv)
@@ -146,7 +154,7 @@ def main():
     print(f"周聚合: {len(weekly):,}")
     print(f"产品特征: {len(prod_feat):,}, 客户特征: {len(cust_feat):,}")
 
-    tw, tws = 23, list(range(19,23))
+    tw, tws = TARGET_WEEK, list(range(TRAIN_START_WEEK, TARGET_WEEK))
     vs = weekly[weekly['week']==tw].groupby('OUTLET')['ARTICLE'].apply(set).to_dict()
 
     all_f1 = []
@@ -192,7 +200,7 @@ def main():
 
     avg = np.mean(all_f1)
     print(f"\n{'='*60}")
-    print(f"W23 平均 F1: {100*avg:.1f}% (v12=68.1%, v9=67.7%, v6=64.1%)")
+    print(f"W23 平均 F1: {100*avg:.1f}% (v_N=TBD%, v_N=TBD%, v_N=TBD%)")
 
 
 if __name__ == "__main__":

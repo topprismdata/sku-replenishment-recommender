@@ -3,12 +3,20 @@ AG v20 — 加route_id + 子渠道特征
 =================================
 新增:
 1. PS_ROUTE (route_id): 同线路客户采购同步, 强特征
-2. sub_channel (子渠道代码): A70/A72/F21 等, 比粗粒度渠道更细
+2. sub_channel (子渠道代码): 例如 sub_code_1 / sub_code_2, 比粗粒度渠道更细
 3. 线路×SKU 交互: 该SKU在该线路的热度
 4. 子渠道×SKU 交互: 该SKU在该子渠道的热度
 
 基于 v19 (预测 N) + 线路/子渠道特征
 """
+# ============================================================
+# Week configuration - adjust to your data
+# ============================================================
+TRAIN_START_WEEK = 1   # first training week (inclusive)
+TARGET_WEEK = 1        # first target / prediction week (inclusive)
+# Extend with: TARGET_WEEK_2 = TARGET_WEEK + 1, etc. for walk-forward
+# ============================================================
+
 import sys, os, time, warnings
 import numpy as np, pandas as pd
 # 定位项目根目录 (含数据文件的目录, 有 lgb_v4.py 或 orders_2026.csv)
@@ -69,12 +77,12 @@ def build_features_v20(weekly, channel, train_weeks, target_week, cooccur, prod_
     candidates['route_penetration'] = candidates['route_penetration'].fillna(0)
 
     # === 子渠道特征 (sub_channel 代码) ===
-    # 候选的 sub_channel (当前 channel 的子代码, 如 A70/A72)
+    # 候选的 sub_channel (当前 channel 的子代码, 如 sub_code_1)
     candidates['sub_channel_code'] = channel
 
     # 子渠道×SKU 热度 (该SKU在该子渠道的购买频次)
-    # 用 ch 的 sub_channel 值 (如 A70)
-    ch_code = channel  # channel is the sub_channel code (e.g., 'A70')
+    # 使用 channel 的 sub_channel 值
+    ch_code = channel  # channel is the sub_channel code (e.g., 'sub_code_1')
     sub_sku = train[train['sub_channel']==ch_code].groupby('ARTICLE').size().reset_index(name='sub_sku_freq')
     candidates = candidates.merge(sub_sku, on='ARTICLE', how='left')
     candidates['sub_sku_freq'] = candidates['sub_sku_freq'].fillna(0)
@@ -101,7 +109,7 @@ def main():
     prod_raw['total_ml'] = prod_raw['size_ml'] * prod_raw['sub_unit_num']
     weekly = weekly.merge(prod_raw[['ARTICLE_NO','size_ml','sub_unit_num','total_ml','CALORIE_INDICATOR_NAME_CN']].rename(columns={'ARTICLE_NO':'ARTICLE','CALORIE_INDICATOR_NAME_CN':'calorie_cat'}), on='ARTICLE', how='left')
 
-    tw, tws = 23, list(range(19,23))
+    tw, tws = TARGET_WEEK, list(range(TRAIN_START_WEEK, TARGET_WEEK))
     vs = weekly[weekly['week']==tw].groupby('OUTLET')['ARTICLE'].apply(set).to_dict()
 
     for ch in ['channel_a']:

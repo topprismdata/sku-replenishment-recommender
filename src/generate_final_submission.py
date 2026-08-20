@@ -28,11 +28,11 @@ from autogluon.tabular import TabularPredictor
 
 # v28 最优 N 参数
 BEST_N = {
-    'channel_a': (7.1, 0.73),
-    'channel_b': (3.4, 1.01),
-    'channel_c': (1.1, 1.17),
-    'channel_d': (3.8, 0.80),
-    'channel_e': (7.1, 0.73),  # reuse channel_a params
+    'channel_a': (TBD_BASE, TBD_MULT),
+    'channel_b': (TBD_BASE, TBD_MULT),
+    'channel_c': (TBD_BASE, TBD_MULT),
+    'channel_d': (TBD_BASE, TBD_MULT),
+    'channel_e': (TBD_BASE, TBD_MULT),  # reuse channel_a params
 }
 
 

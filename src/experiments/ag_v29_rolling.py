@@ -1,20 +1,27 @@
 """
-AG v29 — 滚动验证 (4 个目标周)
-==============================
-确认 v28 参数在多个周都稳定, 不是 W23 过拟合
+AG v29 — 滚动验证 (多个目标周)
+================================
+确认 v28 参数在多个周都稳定, 不是单周过拟合
 
-每周用前 13 周训练:
-- W20: train W7-W19
-- W21: train W8-W20
-- W22: train W9-W21
-- W23: train W10-W22 (已知 F1=73.9%)
+每周用前 N 周训练 (walk-forward):
+- TARGET_WEEK:     train [TRAIN_START_WEEK, TARGET_WEEK)
+- TARGET_WEEK+1:   train [TRAIN_START_WEEK+1, TARGET_WEEK+1)
+- ... (按 1 周滑动)
 
-用 v28 的最优 N 参数:
-  channel_a: base=7.1, mult=0.73
-  channel_b: base=3.4, mult=1.01
-  channel_c: base=1.1, mult=1.17
-  channel_d: base=3.8, mult=0.80
+用 v28 的最优 N 参数 (Optuna-tuned per channel, replace with your own):
+  channel_a: base=TBD, mult=TBD
+  channel_b: base=TBD, mult=TBD
+  channel_c: base=TBD, mult=TBD
+  channel_d: base=TBD, mult=TBD
 """
+# ============================================================
+# Week configuration - adjust to your data
+# ============================================================
+TRAIN_START_WEEK = 1   # first training week (inclusive)
+TARGET_WEEK = 1        # first target / prediction week (inclusive)
+# Extend with: TARGET_WEEK_2 = TARGET_WEEK + 1, etc. for walk-forward
+# ============================================================
+
 import sys, os, time, warnings
 import numpy as np, pandas as pd
 # 定位项目根目录 (含数据文件的目录, 有 lgb_v4.py 或 orders_2026.csv)
@@ -36,13 +43,13 @@ from autogluon.tabular import TabularPredictor
 
 # v28 最优 N 参数
 BEST_N = {
-    'channel_a': (7.1, 0.73),
-    'channel_b': (3.4, 1.01),
-    'channel_c': (1.1, 1.17),
-    'channel_d': (3.8, 0.80),
+    'channel_a': (TBD_BASE, TBD_MULT),
+    'channel_b': (TBD_BASE, TBD_MULT),
+    'channel_c': (TBD_BASE, TBD_MULT),
+    'channel_d': (TBD_BASE, TBD_MULT),
 }
 
-TARGET_WEEKS = [20, 21, 22, 23]
+TARGET_WEEKS = [TBD_WEEK_1, TBD_WEEK_2, ...]
 
 
 def evaluate_n(candidates, valid_skus, channel, base, mult):

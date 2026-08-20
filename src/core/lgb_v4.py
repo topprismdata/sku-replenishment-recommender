@@ -6,11 +6,19 @@ v3->v4 优化:
 2. route_collab: 同线路其他客户最近买的SKU (需要 PS_ROUTE)
 3. SKU 动量: 该SKU在渠道内最近几周的流行度趋势
 """
+# ============================================================
+# Week configuration - adjust to your data
+# ============================================================
+TRAIN_START_WEEK = 1   # first training week (inclusive)
+TARGET_WEEK = 1        # first target / prediction week (inclusive)
+# Extend with: TARGET_WEEK_2 = TARGET_WEEK + 1, etc. for walk-forward
+# ============================================================
+
 import pandas as pd, numpy as np, lightgbm as lgb, warnings
 from collections import defaultdict
 warnings.filterwarnings('ignore')
 
-CHANNEL_MAP = {'channel_a':['A70','A72'],'channel_b':['F21','F20','F22','F12','F13'],'channel_c':['G12','G10','G11','G21'],'channel_d':['A60','A53','A63','A65','A51']}
+CHANNEL_MAP = {'channel_a':['sub_code_1','sub_code_2'],'channel_b':['sub_code_8','sub_code_9','sub_code_10','sub_code_11','sub_code_12'],'channel_c':['sub_code_13','sub_code_14','sub_code_15','sub_code_16'],'channel_d':['sub_code_3','sub_code_4','sub_code_5','sub_code_6','sub_code_7']}
 CODE_TO_CH = {c:ch for ch,cs in CHANNEL_MAP.items() for c in cs}
 CHANNEL_N_CAP = {'channel_a':25, 'channel_b':30, 'channel_c':20, 'channel_d':20}
 
@@ -184,7 +192,7 @@ def main():
 
     all_f1 = []
     first_iter = True
-    for tw in range(19, 29):
+    for tw in range(TRAIN_START_WEEK, TARGET_WEEK):
         tws = list(range(tw-4, tw))
         va = weekly[weekly['week']==tw]
         vs = va.groupby('OUTLET')['ARTICLE'].apply(set).to_dict()
@@ -205,7 +213,7 @@ def main():
         chs = " ".join(f"{c[:2]}={100*v[2]:.0f}%" for c,v in ch_results.items())
         print(f"W{tw}: F1={100*avg_f1:.1f}% | {chs}")
 
-    print(f"\nv4 滚动平均 F1: {100*np.mean(all_f1):.1f}% (v3=53.2%, v2=50.3%, 基线=41.2%)")
+    print(f"\nv4 滚动平均 F1: {100*np.mean(all_f1):.1f}% (v_N=TBD%, v_N=TBD%, 基线=41.2%)")
 
 
 if __name__ == "__main__":
